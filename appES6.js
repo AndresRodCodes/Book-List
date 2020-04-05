@@ -45,11 +45,65 @@ class UI {
 		}, 3000);
 	}
 	deleteBook(target) {
+		// Check for delete class
 		if (target.className === 'delete') {
+			// Remove table row element
 			target.parentElement.parentElement.remove();
 		}
 	}
 }
+
+class Storage {
+	constructor() {}
+	static loadBooks() {
+		let books;
+		if (localStorage.getItem('books') === null) {
+			books = [];
+		} else {
+			books = JSON.parse(localStorage.getItem('books'));
+		}
+
+		return books;
+	}
+
+	static displayBooks() {
+		// Get books from local storage.
+		const books = Storage.loadBooks();
+
+		// Add each book to the list
+		books.forEach(function(book) {
+			// Instantiate UI object
+			const ui = new UI();
+			ui.addBookToList(book);
+		});
+	}
+
+	static saveBook(book) {
+		// Get books
+		const books = Storage.loadBooks();
+		// Add new book
+		books.push(book);
+		// Save to local storage
+		localStorage.setItem('books', JSON.stringify(books));
+	}
+
+	static deleteBook(isbn) {
+		// Get books
+		const books = Storage.loadBooks();
+		// Loop through books
+		books.forEach(function(book, index) {
+			if (book.isbn === isbn) {
+				// Remove book from local storage
+				books.splice(index, 1);
+			}
+			// Set updated LS
+			localStorage.setItem('books', JSON.stringify(books));
+		});
+	}
+}
+
+// ON DOM LOAD EVENT
+document.addEventListener('DOMContentLoaded', Storage.displayBooks());
 
 // EVENT LISTENERS
 // On book submit
@@ -70,6 +124,8 @@ document.querySelector('#book-form').addEventListener('submit', function(e) {
 		//VALID FORM
 		// Instantiate Book object
 		const book = new Book(UITitle, UIAuthor, UIisbn);
+		// Save book to local storage
+		Storage.saveBook(book);
 		// Add book to list with form values
 		ui.addBookToList(book);
 		// Clear UI field
@@ -83,6 +139,8 @@ document.querySelector('#book-form').addEventListener('submit', function(e) {
 
 // On remove book
 document.querySelector('#book-list').addEventListener('click', function(e) {
+	// Remove from local storage
+	Storage.deleteBook(e.target.parentElement.previousElementSibling.textContent);
 	// Instantiate UI object
 	const ui = new UI();
 	// Delete book
